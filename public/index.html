@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ponte Selar → UTMify</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --primary:       #4361EE;
+  --primary-light: #EEF0FF;
+  --primary-dark:  #3451D1;
+  --success:       #22C55E;
+  --success-bg:    #DCFCE7;
+  --danger:        #EF4444;
+  --danger-bg:     #FEE2E2;
+  --warning:       #F59E0B;
+  --warning-bg:    #FEF3C7;
+  --bg:            #F0F2F7;
+  --card:          #FFFFFF;
+  --text:          #1E293B;
+  --text-muted:    #94A3B8;
+  --border:        #E2E8F0;
+  --sidebar-w:     230px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);background:var(--card);height:100vh;display:flex;flex-direction:column;padding:24px 14px;box-shadow:2px 0 8px rgba(0,0,0,0.04);flex-shrink:0;overflow-y:auto}
+.logo{display:flex;align-items:center;gap:10px;padding:0 8px;margin-bottom:30px}
+.logo-icon{width:38px;height:38px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0}
+.logo-text{font-weight:700;font-size:14px;color:var(--text);line-height:1.3}
+.logo-sub{font-size:10px;color:var(--text-muted);font-weight:400}
+.nav-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);padding:0 8px;margin:18px 0 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:500;color:#64748B;margin-bottom:2px;user-select:none;transition:all .15s}
+.nav-item:hover{background:var(--primary-light);color:var(--primary)}
+.nav-item.active{background:var(--primary);color:#fff}
+.nav-item .ni{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.sidebar-spacer{flex:1}
+.upgrade-box{background:#1E293B;border-radius:14px;padding:18px 14px;color:#fff;margin-top:12px}
+.upgrade-box .up-icon{width:38px;height:38px;background:rgba(255,255,255,.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px}
+.upgrade-box h4{font-size:12px;font-weight:700;margin-bottom:5px}
+.upgrade-box p{font-size:11px;color:rgba(255,255,255,.55);margin-bottom:12px;line-height:1.5}
+.upgrade-btn{background:var(--primary);color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;width:100%;font-family:inherit}
+
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;padding:26px 24px 40px}
+
+/* ── HEADER ── */
+.header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap}
+.header-left h1{font-size:21px;font-weight:700}
+.header-left p{font-size:12.5px;color:var(--text-muted);margin-top:3px}
+.header-right{display:flex;align-items:center;gap:10px}
+.icon-btn{width:40px;height:40px;background:var(--card);border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-muted);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.icon-btn.notif{position:relative}
+.icon-btn.notif::after{content:'';position:absolute;top:9px;right:9px;width:7px;height:7px;background:var(--danger);border-radius:50%;border:2px solid var(--card)}
+.user-pill{display:flex;align-items:center;gap:9px;background:var(--card);border-radius:50px;padding:5px 14px 5px 5px;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer}
+.user-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#4361EE,#7C3AED);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700}
+.user-name{font-size:12px;font-weight:600}
+.user-role{font-size:10px;color:var(--text-muted)}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.sc{background:var(--card);border-radius:16px;padding:20px;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.sc.blue{background:var(--primary);color:#fff}
+.sc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sc-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.sc-icon.li{background:var(--primary-light)}
+.sc-icon.lw{background:rgba(255,255,255,.2)}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:10.5px;font-weight:600}
+.bg-ok{background:var(--success-bg);color:#16A34A}
+.bg-err{background:var(--danger-bg);color:#DC2626}
+.bg-warn{background:var(--warning-bg);color:#D97706}
+.bg-wt{background:rgba(255,255,255,.2);color:#fff}
+.sc-val{font-size:24px;font-weight:700;letter-spacing:-.5px;margin-bottom:3px}
+.sc.blue .sc-val{color:#fff}
+.sc-lbl{font-size:11.5px;color:var(--text-muted)}
+.sc.blue .sc-lbl{color:rgba(255,255,255,.7)}
+
+/* ── CHART ROW ── */
+.charts-row{display:grid;grid-template-columns:1fr 320px;gap:18px;margin-bottom:20px}
+.cc{background:var(--card);border-radius:16px;padding:22px;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.cc-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px}
+.cc-head h3{font-size:14.5px;font-weight:700}
+.cc-head p{font-size:11.5px;color:var(--text-muted);margin-top:2px}
+.cc-select{border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11.5px;font-family:inherit;color:var(--text);cursor:pointer;background:#fff;outline:none}
+.legend{display:flex;align-items:center;gap:14px;margin:10px 0 14px}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-muted)}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.right-col{display:flex;flex-direction:column;gap:18px}
+
+/* ── DONUT ── */
+.donut-wrap{position:relative;width:130px;height:130px;margin:10px auto 14px}
+.donut-lbl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.donut-lbl .dv{font-size:20px;font-weight:700;display:block}
+.donut-lbl .ds{font-size:10px;color:var(--text-muted);display:block}
+.stat-list{display:flex;flex-direction:column;gap:9px}
+.sl-item{display:flex;align-items:center;justify-content:space-between}
+.sl-left{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:500}
+.sl-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.sl-right{display:flex;align-items:center;gap:7px}
+.sl-val{font-size:13px;font-weight:700}
+
+/* ── BOTTOM ROW ── */
+.bottom-row{display:grid;grid-template-columns:1fr 320px;gap:18px}
+.growth-bubbles{display:flex;align-items:center;gap:12px;margin:12px 0 14px}
+.bubble{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0}
+.b-lg{width:74px;height:74px;font-size:17px;background:var(--primary)}
+.b-md{width:56px;height:56px;font-size:13px;background:#60A5FA}
+.b-sm{width:40px;height:40px;font-size:11px;background:#93C5FD}
+.ctr-list{display:flex;flex-direction:column;gap:9px}
+.ctr-item{display:flex;align-items:center;justify-content:space-between}
+.ctr-left{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500}
+.ctr-right{font-size:13px;font-weight:700}
+.ctr-bar{height:3px;background:var(--border);border-radius:2px;margin-top:3px}
+.ctr-fill{height:100%;border-radius:2px;background:var(--primary)}
+
+/* ── TABLE ── */
+.tbl-card{background:var(--card);border-radius:16px;padding:22px;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;padding:9px 12px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);border-bottom:1.5px solid var(--border)}
+td{padding:11px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAFBFC}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.pill-ok{background:var(--success-bg);color:#16A34A}
+.pill-pend{background:var(--warning-bg);color:#D97706}
+.pill-err{background:var(--danger-bg);color:#DC2626}
+.pill-ref{background:#F3E8FF;color:#7C3AED}
+
+/* ── VIEWS ── */
+.view{display:none}
+.view.active{display:block}
+
+/* ── SETTINGS ── */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.settings-card{background:var(--card);border-radius:16px;padding:26px;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.settings-card.full{grid-column:1/-1}
+.settings-card h3{font-size:15px;font-weight:700;margin-bottom:5px}
+.settings-card .desc{font-size:12.5px;color:var(--text-muted);margin-bottom:22px;line-height:1.6}
+.fg{margin-bottom:16px}
+.fg label{display:block;font-size:11.5px;font-weight:600;margin-bottom:7px}
+.fg .hint{font-size:11px;color:var(--text-muted);margin-top:4px}
+.inp-wrap{position:relative}
+.finput{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:12.5px;font-family:inherit;color:var(--text);outline:none;background:#fff;transition:border-color .15s}
+.finput:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
+.finput.pr{padding-right:42px}
+.finput.ro{background:var(--bg);color:var(--text-muted)}
+.eye-btn{position:absolute;right:11px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;color:var(--text-muted);padding:2px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{padding:10px 18px;border-radius:9px;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:var(--primary);color:#fff}
+.btn-p:hover{background:var(--primary-dark)}
+.btn-o{background:#fff;color:var(--text);border:1.5px solid var(--border)}
+.btn-o:hover{background:var(--bg)}
+.btn-s{background:var(--success-bg);color:#16A34A}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.form-actions{display:flex;gap:9px;margin-top:20px;flex-wrap:wrap}
+.conn-box{display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:9px;font-size:12.5px;font-weight:500;margin-top:12px}
+.conn-ok{background:var(--success-bg);color:#16A34A}
+.conn-err{background:var(--danger-bg);color:#DC2626}
+.conn-idle{background:var(--bg);color:var(--text-muted)}
+.conn-warn{background:var(--warning-bg);color:#D97706}
+.sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sdot-ok{background:var(--success)}
+.sdot-err{background:var(--danger)}
+.sdot-idle{background:var(--text-muted)}
+.sdot-pulse{background:var(--warning);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+
+.env-box{background:#1E293B;color:#E2E8F0;border-radius:10px;padding:16px 18px;font-family:'Courier New',monospace;font-size:12px;line-height:2.1;position:relative;overflow-x:auto}
+.env-copy{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.1);border:none;color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit}
+.env-k{color:#93C5FD}
+.env-v{color:#86EFAC}
+.env-c{color:#94A3B8}
+
+.steps{list-style:none;counter-reset:s}
+.steps li{counter-increment:s;display:flex;gap:11px;margin-bottom:12px;font-size:13px;line-height:1.6;color:#475569}
+.steps li::before{content:counter(s);width:22px;height:22px;background:var(--primary-light);color:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;flex-shrink:0;margin-top:2px}
+
+/* ── SYNC VIEW ── */
+.sync-card{background:var(--card);border-radius:16px;padding:26px;box-shadow:0 1px 6px rgba(0,0,0,.05);margin-bottom:18px}
+.sync-rg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+.sync-ri{text-align:center;padding:18px 12px;border-radius:12px;background:var(--bg)}
+.sync-ri .rn{font-size:30px;font-weight:700;display:block}
+.sync-ri .rl{font-size:11.5px;color:var(--text-muted);margin-top:3px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:22px;right:22px;background:#1E293B;color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:1000;transform:translateY(16px);opacity:0;transition:all .25s;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* ── SPINNER ── */
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-row,.bottom-row{grid-template-columns:1fr}
+  .settings-grid{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  body{flex-direction:column}
+  .sidebar{width:100%;height:auto;flex-direction:row;flex-wrap:wrap;padding:12px;overflow-x:auto}
+  .sidebar-spacer,.upgrade-box,.nav-label{display:none}
+  .main{padding:16px}
+}
+
+/* ── BADGE in STATUS LIST  ── */
+.alert-count{background:var(--danger-bg);color:var(--danger);font-size:10px;font-weight:700;border-radius:20px;padding:2px 7px;min-width:20px;text-align:center}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════ SIDEBAR ════════════════════════════ -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">PS</div>
+    <div>
+      <div class="logo-text">Ponte Selar</div>
+      <div class="logo-sub">→ UTMify</div>
+    </div>
+  </div>
+
+  <div class="nav-label">Menu</div>
+  <div class="nav-item active" data-view="dashboard" onclick="nav('dashboard')">
+    <span class="ni">📊</span> Dashboard
+  </div>
+  <div class="nav-item" data-view="sync" onclick="nav('sync')">
+    <span class="ni">🔄</span> Sincronização
+  </div>
+  <div class="nav-item" data-view="transactions" onclick="nav('transactions')">
+    <span class="ni">📦</span> Vendas
+  </div>
+
+  <div class="nav-label">Financeiro</div>
+  <div class="nav-item" data-view="transactions" onclick="nav('transactions')">
+    <span class="ni">💳</span> Transações
+  </div>
+  <div class="nav-item">
+    <span class="ni">🧾</span> Faturas
+  </div>
+
+  <div class="nav-label">Ferramentas</div>
+  <div class="nav-item" data-view="settings" onclick="nav('settings')">
+    <span class="ni">⚙️</span> Configurações
+  </div>
+  <div class="nav-item" onclick="showToast('Em breve...')">
+    <span class="ni">❓</span> Ajuda
+  </div>
+
+  <div class="sidebar-spacer"></div>
+
+  <div class="upgrade-box">
+    <div class="up-icon">🗄️</div>
+    <h4>Vercel KV</h4>
+    <p>Ative deduplicação persistente para evitar pedidos duplicados.</p>
+    <button class="upgrade-btn" onclick="nav('settings')">Configurar agora</button>
+  </div>
+</aside>
+
+<!-- ════════════════════════════ MAIN ════════════════════════════ -->
+<main class="main">
+
+<!-- ══════════════ VIEW: DASHBOARD ══════════════ -->
+<div id="view-dashboard" class="view active">
+  <div class="header">
+    <div class="header-left">
+      <h1>Relatório de Vendas</h1>
+      <p id="current-date">—</p>
+    </div>
+    <div class="header-right">
+      <button class="icon-btn">🔍</button>
+      <button class="icon-btn notif">🔔</button>
+      <div class="user-pill" onclick="nav('settings')">
+        <div class="user-av">A</div>
+        <div>
+          <div class="user-name">Admin</div>
+          <div class="user-role">Loja Selar</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stats-grid">
+    <div class="sc blue">
+      <div class="sc-head">
+        <div class="sc-icon lw">💰</div>
+        <span class="badge bg-wt" id="badge-total">+0%</span>
+      </div>
+      <div class="sc-val" id="stat-total">$0.00</div>
+      <div class="sc-lbl">Total de Vendas · vs mês passado</div>
+    </div>
+    <div class="sc">
+      <div class="sc-head">
+        <div class="sc-icon li">📋</div>
+        <span class="badge bg-ok" id="badge-orders">+0</span>
+      </div>
+      <div class="sc-val" id="stat-orders">0</div>
+      <div class="sc-lbl">Total de Pedidos · Selar</div>
+    </div>
+    <div class="sc">
+      <div class="sc-head">
+        <div class="sc-icon li">⚡</div>
+        <span class="badge bg-ok" id="badge-skipped">0 dup.</span>
+      </div>
+      <div class="sc-val" id="stat-sent">0</div>
+      <div class="sc-lbl">Enviados à UTMify · total</div>
+    </div>
+    <div class="sc">
+      <div class="sc-head">
+        <div class="sc-icon li">⚠️</div>
+        <span class="badge bg-err" id="badge-errors">0 erros</span>
+      </div>
+      <div class="sc-val" id="stat-errors">0</div>
+      <div class="sc-lbl">Erros de Sync · última execução</div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW -->
+  <div class="charts-row">
+    <div class="cc">
+      <div class="cc-head">
+        <div>
+          <h3>Histórico de Sincronização</h3>
+          <p>Pedidos Selar vs enviados à UTMify</p>
+        </div>
+        <select class="cc-select" id="sel-period" onchange="updateBarChart()">
+          <option>Este ano</option>
+          <option>6 meses</option>
+          <option>3 meses</option>
+        </select>
+      </div>
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#E2E8F0"></div>Vendas Selar</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--primary)"></div>Enviados UTMify</div>
+      </div>
+      <canvas id="chartSync" height="185"></canvas>
+    </div>
+    <div class="right-col">
+      <div class="cc">
+        <div class="cc-head">
+          <div>
+            <h3>Status de Vendas</h3>
+            <p>Distribuição por status</p>
+          </div>
+          <select class="cc-select"><option>Hoje</option><option>7 dias</option></select>
+        </div>
+        <div class="donut-wrap">
+          <canvas id="chartDonut"></canvas>
+          <div class="donut-lbl">
+            <span class="dv" id="donut-total">0</span>
+            <span class="ds">vendas</span>
+          </div>
+        </div>
+        <div class="stat-list">
+          <div class="sl-item">
+            <div class="sl-left"><div class="sl-dot" style="background:#4361EE"></div>Pagas</div>
+            <div class="sl-right"><span class="sl-val" id="sl-paid">0</span><span class="badge bg-ok" id="sl-paid-pct">0%</span></div>
+          </div>
+          <div class="sl-item">
+            <div class="sl-left"><div class="sl-dot" style="background:#F59E0B"></div>Pendentes</div>
+            <div class="sl-right"><span class="sl-val" id="sl-pend">0</span><span class="badge bg-warn" id="sl-pend-pct">0%</span></div>
+          </div>
+          <div class="sl-item">
+            <div class="sl-left"><div class="sl-dot" style="background:#EF4444"></div>Reembolsadas</div>
+            <div class="sl-right"><span class="sl-val" id="sl-ref">0</span><span class="badge bg-err" id="sl-ref-pct">0%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM ROW -->
+  <div class="bottom-row">
+    <div class="cc">
+      <div class="cc-head">
+        <div>
+          <h3>Origens UTM</h3>
+          <p>Fonte de tráfego das vendas (utm_source)</p>
+        </div>
+        <select class="cc-select"><option>Este mês</option><option>7 dias</option></select>
+      </div>
+      <canvas id="chartUTM" height="160"></canvas>
+    </div>
+    <div class="cc">
+      <div class="cc-head">
+        <div>
+          <h3>Crescimento de Clientes</h3>
+          <p>Pedidos por período</p>
+        </div>
+        <select class="cc-select"><option>Hoje</option><option>7 dias</option></select>
+      </div>
+      <div class="growth-bubbles">
+        <div class="bubble b-lg" id="bubble1">—</div>
+        <div class="bubble b-md" id="bubble2">—</div>
+        <div class="bubble b-sm" id="bubble3">—</div>
+      </div>
+      <div class="ctr-list" id="country-list"></div>
+    </div>
+  </div>
+</div><!-- /view-dashboard -->
+
+
+<!-- ══════════════ VIEW: SYNC ══════════════ -->
+<div id="view-sync" class="view">
+  <div class="header">
+    <div class="header-left">
+      <h1>Sincronização</h1>
+      <p>Controle e histórico do processo de sync Selar → UTMify</p>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-o" onclick="nav('settings')">⚙️ Configurações</button>
+      <button class="btn btn-p" id="btn-sync" onclick="runSync()">🔄 Sincronizar Agora</button>
+    </div>
+  </div>
+
+  <div class="sync-card">
+    <h3 style="margin-bottom:6px">Última Execução</h3>
+    <p style="font-size:12.5px;color:var(--text-muted)">
+      Endpoint: <code style="background:var(--bg);padding:1px 7px;border-radius:5px;font-size:12px">/api/sync</code>
+      — O cron automático já roda a cada 5 minutos via Vercel.
+    </p>
+    <div id="sync-status" class="conn-box conn-idle" style="display:none">
+      <div class="sdot sdot-idle" id="sync-sdot"></div>
+      <span id="sync-stxt">Aguardando...</span>
+    </div>
+    <div class="sync-rg" id="sync-rg" style="display:none">
+      <div class="sync-ri"><span class="rn" id="rn-fetch" style="color:var(--primary)">—</span><div class="rl">Buscados no Selar</div></div>
+      <div class="sync-ri"><span class="rn" id="rn-sent" style="color:var(--success)">—</span><div class="rl">Enviados à UTMify</div></div>
+      <div class="sync-ri"><span class="rn" id="rn-skip" style="color:var(--warning)">—</span><div class="rl">Ignorados (duplic.)</div></div>
+      <div class="sync-ri"><span class="rn" id="rn-err" style="color:var(--danger)">—</span><div class="rl">Erros</div></div>
+    </div>
+  </div>
+
+  <div class="tbl-card">
+    <div class="cc-head" style="margin-bottom:14px">
+      <div><h3>Log de Execuções</h3><p style="font-size:12px;color:var(--text-muted)">Histórico desta sessão</p></div>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Data / Hora</th><th>Buscados</th><th>Enviados</th><th>Ignorados</th><th>Erros</th><th>Status</th>
+      </tr></thead>
+      <tbody id="log-body">
+        <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:28px 0">
+          Nenhuma execução nesta sessão. Clique em "Sincronizar Agora" acima.
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+</div><!-- /view-sync -->
+
+
+<!-- ══════════════ VIEW: TRANSACTIONS ══════════════ -->
+<div id="view-transactions" class="view">
+  <div class="header">
+    <div class="header-left">
+      <h1>Vendas do Selar</h1>
+      <p>Transações captadas na última sincronização</p>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-p" onclick="nav('sync');runSync()">🔄 Sincronizar</button>
+    </div>
+  </div>
+  <div class="tbl-card">
+    <table>
+      <thead><tr>
+        <th>ID</th><th>Cliente</th><th>Produto</th><th>Valor</th><th>Status</th><th>utm_source</th><th>Data</th>
+      </tr></thead>
+      <tbody id="tx-body">
+        <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:28px 0">
+          Execute uma sincronização para ver as transações.
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+</div><!-- /view-transactions -->
+
+
+<!-- ══════════════ VIEW: SETTINGS ══════════════ -->
+<div id="view-settings" class="view">
+  <div class="header">
+    <div class="header-left">
+      <h1>Configurações</h1>
+      <p>Cole suas credenciais de API — salvas apenas no seu navegador</p>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-s" onclick="saveAll()">💾 Salvar Tudo</button>
+    </div>
+  </div>
+
+  <div class="settings-grid">
+
+    <!-- SELAR -->
+    <div class="settings-card">
+      <h3>🟣 Credenciais do Selar</h3>
+      <p class="desc">
+        Gere sua chave em <strong>Selar → Área do Produtor → Desenvolvedor → API Key</strong>.
+        Se a chave anterior foi exposta, <strong>regenere antes de usar</strong>.
+      </p>
+
+      <div class="fg">
+        <label>SELAR_API_KEY <span style="color:var(--danger)">*</span></label>
+        <div class="inp-wrap">
+          <input type="password" class="finput pr" id="selar-key" placeholder="Cole sua Selar API Key aqui..." autocomplete="off">
+          <button class="eye-btn" onclick="toggleEye('selar-key',this)">👁</button>
+        </div>
+        <div class="hint">Nunca compartilhe. Armazenada só localmente (localStorage).</div>
+      </div>
+
+      <div class="frow">
+        <div class="fg">
+          <label>URL Base da API</label>
+          <input type="text" class="finput" id="selar-base" placeholder="https://api.selar.com" value="https://api.selar.com">
+        </div>
+        <div class="fg">
+          <label>Caminho do endpoint</label>
+          <input type="text" class="finput" id="selar-path" placeholder="/v1/transactions" value="/v1/transactions">
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Header de autenticação</label>
+        <input type="text" class="finput" id="selar-auth-header" placeholder="Authorization" value="Authorization">
+        <div class="hint">Nome do header — pode ser <code>Authorization</code>, <code>x-api-key</code> etc. Confirme na doc do Selar.</div>
+      </div>
+
+      <div id="selar-conn" class="conn-box conn-idle" style="display:none">
+        <div class="sdot sdot-idle" id="selar-dot"></div>
+        <span id="selar-txt">Não testado</span>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-p" onclick="saveAll()">💾 Salvar</button>
+        <button class="btn btn-o" onclick="testSelar()">🔌 Testar Conexão</button>
+      </div>
+    </div>
+
+    <!-- UTMIFY -->
+    <div class="settings-card">
+      <h3>🔵 Credenciais da UTMify</h3>
+      <p class="desc">
+        Gere seu token em <strong>UTMify → Integrações → API Credentials → Criar Credencial</strong>.
+        Use a URL exibida na plataforma.
+      </p>
+
+      <div class="fg">
+        <label>UTMIFY_API_TOKEN <span style="color:var(--danger)">*</span></label>
+        <div class="inp-wrap">
+          <input type="password" class="finput pr" id="utmify-token" placeholder="Cole seu UTMify API Token aqui..." autocomplete="off">
+          <button class="eye-btn" onclick="toggleEye('utmify-token',this)">👁</button>
+        </div>
+        <div class="hint">Token para autorizar envio de pedidos à UTMify.</div>
+      </div>
+
+      <div class="fg">
+        <label>Endpoint UTMify</label>
+        <input type="text" class="finput ro" id="utmify-url" value="https://api.utmify.com.br/api-credentials/orders" readonly>
+        <div class="hint">Endpoint fixo da UTMify para envio de pedidos.</div>
+      </div>
+
+      <div class="frow">
+        <div class="fg">
+          <label>Janela de busca (min)</label>
+          <input type="number" class="finput" id="window-min" value="15" min="5" max="60">
+          <div class="hint">Padrão: 15 min</div>
+        </div>
+        <div class="fg">
+          <label>Header de auth UTMify</label>
+          <input type="text" class="finput" id="utmify-header" value="x-api-token">
+          <div class="hint">Confirme na doc.</div>
+        </div>
+      </div>
+
+      <div id="utmify-conn" class="conn-box conn-idle" style="display:none">
+        <div class="sdot sdot-idle" id="utmify-dot"></div>
+        <span id="utmify-txt">Não testado</span>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-p" onclick="saveAll()">💾 Salvar</button>
+        <button class="btn btn-o" onclick="testUtmify()">🔌 Testar Token</button>
+      </div>
+    </div>
+
+    <!-- SEGURANÇA -->
+    <div class="settings-card">
+      <h3>🔐 Segurança do Endpoint</h3>
+      <p class="desc">
+        Segredo enviado no header <code style="background:var(--bg);padding:1px 6px;border-radius:4px">Authorization: Bearer …</code>
+        para proteger <code style="background:var(--bg);padding:1px 6px;border-radius:4px">/api/sync</code> de acesso não autorizado.
+      </p>
+
+      <div class="fg">
+        <label>CRON_SECRET <span style="color:var(--danger)">*</span></label>
+        <div class="inp-wrap">
+          <input type="password" class="finput pr" id="cron-secret" placeholder="String aleatória longa..." autocomplete="off">
+          <button class="eye-btn" onclick="toggleEye('cron-secret',this)">👁</button>
+        </div>
+        <div class="hint">Deve ser igual à variável de ambiente na Vercel.</div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-p" onclick="saveAll()">💾 Salvar</button>
+        <button class="btn btn-o" onclick="genSecret()">🎲 Gerar Segredo</button>
+        <button class="btn btn-o" onclick="runSync();nav('sync')">▶ Testar Sync</button>
+      </div>
+    </div>
+
+    <!-- DEPLOY -->
+    <div class="settings-card">
+      <h3>🚀 Deploy na Vercel</h3>
+      <p class="desc">Passos para colocar a integração em produção.</p>
+      <ol class="steps">
+        <li>Suba este repositório no GitHub (ou GitLab/Bitbucket).</li>
+        <li>Acesse vercel.com → <strong>New Project</strong> → importe o repo.</li>
+        <li>Em <strong>Settings → Environment Variables</strong> adicione as três chaves abaixo.</li>
+        <li>O cron em <code>vercel.json</code> já dispara <code>/api/sync</code> a cada 5 min automaticamente.</li>
+        <li>(Recomendado) Crie um <strong>Vercel KV</strong> store e conecte ao projeto para deduplicação persistente.</li>
+      </ol>
+    </div>
+
+    <!-- ENV FILE (full width) -->
+    <div class="settings-card full">
+      <h3>📋 Variáveis de Ambiente</h3>
+      <p class="desc">
+        Copie e cole no arquivo <code>.env.local</code> para testes locais, ou use como referência
+        ao configurar na Vercel. <strong>Nunca commite este arquivo com valores reais.</strong>
+      </p>
+      <div class="env-box">
+        <button class="env-copy" onclick="copyEnv()">📋 Copiar</button>
+        <span class="env-c"># Selar</span><br>
+        <span class="env-k">SELAR_API_KEY</span>=<span class="env-v" id="ev-selar">sua_chave_selar_aqui</span><br>
+        <br>
+        <span class="env-c"># UTMify</span><br>
+        <span class="env-k">UTMIFY_API_TOKEN</span>=<span class="env-v" id="ev-utmify">seu_token_utmify_aqui</span><br>
+        <br>
+        <span class="env-c"># Segurança do endpoint /api/sync</span><br>
+        <span class="env-k">CRON_SECRET</span>=<span class="env-v" id="ev-cron">seu_segredo_aqui</span>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /view-settings -->
+
+</main><!-- /main -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function nav(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const el = document.getElementById('view-' + view);
+  if (el) el.classList.add('active');
+  document.querySelectorAll(`[data-view="${view}"]`).forEach(n => n.classList.add('active'));
+}
+
+// ═══════════════════════════════════════════
+// DATE
+// ═══════════════════════════════════════════
+(function() {
+  const d = new Date();
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('current-date').textContent = d.toLocaleDateString('pt-BR', opts);
+})();
+
+// ═══════════════════════════════════════════
+// LOCAL STORAGE CONFIG
+// ═══════════════════════════════════════════
+const LS = 'ps_cfg_v1';
+function loadCfg() {
+  try { return JSON.parse(localStorage.getItem(LS) || '{}'); } catch { return {}; }
+}
+
+function saveAll() {
+  const cfg = {
+    selarKey:        document.getElementById('selar-key').value.trim(),
+    selarBase:       document.getElementById('selar-base').value.trim(),
+    selarPath:       document.getElementById('selar-path').value.trim(),
+    selarAuthHeader: document.getElementById('selar-auth-header').value.trim(),
+    utmifyToken:     document.getElementById('utmify-token').value.trim(),
+    utmifyUrl:       document.getElementById('utmify-url').value.trim(),
+    utmifyHeader:    document.getElementById('utmify-header').value.trim(),
+    windowMin:       document.getElementById('window-min').value,
+    cronSecret:      document.getElementById('cron-secret').value.trim(),
+  };
+  localStorage.setItem(LS, JSON.stringify(cfg));
+  updateEnvBlock(cfg);
+  showToast('✅ Configurações salvas no navegador');
+}
+
+function fillFromStorage() {
+  const c = loadCfg();
+  if (c.selarKey)        document.getElementById('selar-key').value = c.selarKey;
+  if (c.selarBase)       document.getElementById('selar-base').value = c.selarBase;
+  if (c.selarPath)       document.getElementById('selar-path').value = c.selarPath;
+  if (c.selarAuthHeader) document.getElementById('selar-auth-header').value = c.selarAuthHeader;
+  if (c.utmifyToken)     document.getElementById('utmify-token').value = c.utmifyToken;
+  if (c.utmifyUrl)       document.getElementById('utmify-url').value = c.utmifyUrl;
+  if (c.utmifyHeader)    document.getElementById('utmify-header').value = c.utmifyHeader;
+  if (c.windowMin)       document.getElementById('window-min').value = c.windowMin;
+  if (c.cronSecret)      document.getElementById('cron-secret').value = c.cronSecret;
+  updateEnvBlock(c);
+}
+
+function updateEnvBlock(c) {
+  document.getElementById('ev-selar').textContent  = c.selarKey    || 'sua_chave_selar_aqui';
+  document.getElementById('ev-utmify').textContent = c.utmifyToken || 'seu_token_utmify_aqui';
+  document.getElementById('ev-cron').textContent   = c.cronSecret  || 'seu_segredo_aqui';
+}
+
+function copyEnv() {
+  const c = loadCfg();
+  const txt = [
+    `SELAR_API_KEY=${c.selarKey || ''}`,
+    `UTMIFY_API_TOKEN=${c.utmifyToken || ''}`,
+    `CRON_SECRET=${c.cronSecret || ''}`,
+  ].join('\n');
+  navigator.clipboard.writeText(txt)
+    .then(() => showToast('📋 Copiado para área de transferência'))
+    .catch(() => showToast('❌ Copiar falhou — verifique permissões'));
+}
+
+// ═══════════════════════════════════════════
+// TOGGLE EYE (password visibility)
+// ═══════════════════════════════════════════
+function toggleEye(id, btn) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+// ═══════════════════════════════════════════
+// GENERATE SECRET
+// ═══════════════════════════════════════════
+function genSecret() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const bytes = crypto.getRandomValues(new Uint8Array(40));
+  const secret = Array.from(bytes).map(b => chars[b % chars.length]).join('');
+  const el = document.getElementById('cron-secret');
+  el.value = secret;
+  el.type = 'text';
+  document.querySelector('[onclick*="cron-secret"]').textContent = '🙈';
+  showToast('🎲 Segredo gerado — clique em Salvar');
+}
+
+// ═══════════════════════════════════════════
+// TEST CONNECTIONS
+// ═══════════════════════════════════════════
+async function testSelar() {
+  const c = loadCfg();
+  if (!c.selarKey) { showToast('⚠️ Cole a API Key do Selar primeiro'); nav('settings'); return; }
+  setConn('selar', 'pulse', 'idle', 'Testando conexão com o Selar...');
+  document.getElementById('selar-conn').style.display = 'flex';
+  try {
+    const url = (c.selarBase || 'https://api.selar.com') + (c.selarPath || '/v1/transactions');
+    const header = c.selarAuthHeader || 'Authorization';
+    const headers = { 'Content-Type':'application/json' };
+    headers[header] = `Bearer ${c.selarKey}`;
+    const res = await fetch(url, { headers });
+    if (res.ok) {
+      setConn('selar', 'ok', 'ok', '✓ Conectado ao Selar com sucesso');
+    } else if (res.status === 401 || res.status === 403) {
+      setConn('selar', 'err', 'err', `✗ Auth falhou (${res.status}) — verifique a chave`);
+    } else {
+      setConn('selar', 'err', 'err', `✗ Resposta ${res.status} — verifique URL e endpoint`);
+    }
+  } catch (e) {
+    setConn('selar', 'err', 'err', `✗ Erro de rede: ${e.message} (possível bloqueio CORS)`);
+  }
+}
+
+async function testUtmify() {
+  const c = loadCfg();
+  if (!c.utmifyToken) { showToast('⚠️ Cole o token da UTMify primeiro'); nav('settings'); return; }
+  setConn('utmify', 'pulse', 'idle', 'Validando token UTMify...');
+  document.getElementById('utmify-conn').style.display = 'flex';
+  await new Promise(r => setTimeout(r, 600));
+  if (c.utmifyToken.length >= 16) {
+    setConn('utmify', 'ok', 'ok', '✓ Token configurado — será validado na próxima sincronização');
+  } else {
+    setConn('utmify', 'err', 'err', '✗ Token parece inválido (muito curto)');
+  }
+}
+
+function setConn(which, dot, box, txt) {
+  const dotEl = document.getElementById(`${which}-dot`);
+  const boxEl = document.getElementById(`${which}-conn`);
+  const txtEl = document.getElementById(`${which}-txt`);
+  dotEl.className = `sdot sdot-${dot}`;
+  boxEl.className = `conn-box conn-${box === 'ok' ? 'ok' : box === 'err' ? 'err' : box === 'warn' ? 'warn' : 'idle'}`;
+  txtEl.textContent = txt;
+}
+
+// ═══════════════════════════════════════════
+// SYNC
+// ═══════════════════════════════════════════
+const syncLog = [];
+
+async function runSync() {
+  const c = loadCfg();
+  const btn = document.getElementById('btn-sync');
+  const sBox = document.getElementById('sync-status');
+  const sDot = document.getElementById('sync-sdot');
+  const sTxt = document.getElementById('sync-stxt');
+  const rg   = document.getElementById('sync-rg');
+
+  if (btn) { btn.innerHTML = '<span class="spinner"></span> Sincronizando...'; btn.disabled = true; }
+  sBox.style.display = 'flex';
+  sBox.className = 'conn-box conn-idle';
+  sDot.className = 'sdot sdot-pulse';
+  sTxt.textContent = 'Conectando...';
+  rg.style.display = 'none';
+
+  if (!c.selarKey || !c.utmifyToken) {
+    showToast('⚠️ Configure as credenciais em Configurações primeiro');
+    nav('settings');
+    if (btn) { btn.innerHTML = '🔄 Sincronizar Agora'; btn.disabled = false; }
+    sBox.style.display = 'flex';
+    sBox.className = 'conn-box conn-err';
+    sDot.className = 'sdot sdot-err';
+    sTxt.textContent = 'Credenciais não configuradas — acesse Configurações';
+    return;
+  }
+
+  try {
+    const headers = {
+      'x-selar-key':         c.selarKey,
+      'x-selar-base':        c.selarBase        || 'https://api.selar.com',
+      'x-selar-path':        c.selarPath        || '/v1/transactions',
+      'x-selar-auth-header': c.selarAuthHeader  || 'Authorization',
+      'x-utmify-token':      c.utmifyToken,
+      'x-utmify-header':     c.utmifyHeader     || 'x-api-token',
+      'x-utmify-url':        c.utmifyUrl        || 'https://api.utmify.com.br/api-credentials/orders',
+      'x-window-minutes':    String(c.windowMin  || '15'),
+    };
+    if (c.cronSecret) headers['Authorization'] = `Bearer ${c.cronSecret}`;
+    const res = await fetch('/api/sync', { headers });
+    const data = await res.json();
+
+    if (res.ok) {
+      const errCount = Array.isArray(data.errors) ? data.errors.length : 0;
+      document.getElementById('rn-fetch').textContent = data.fetched ?? 0;
+      document.getElementById('rn-sent').textContent  = data.sent   ?? 0;
+      document.getElementById('rn-skip').textContent  = data.skipped ?? 0;
+      document.getElementById('rn-err').textContent   = errCount;
+      rg.style.display = 'grid';
+
+      sBox.className = 'conn-box conn-ok';
+      sDot.className = 'sdot sdot-ok';
+      sTxt.textContent = `Concluído: ${data.sent ?? 0} enviados · ${data.skipped ?? 0} ignorados · ${errCount} erros`;
+
+      // update dashboard counters
+      updateDashboardCounters(data);
+
+      // log
+      syncLog.unshift({ time: now(), ...data, ok: true });
+      renderLog();
+      showToast(`✅ Sync OK — ${data.sent ?? 0} enviados à UTMify`);
+    } else {
+      throw new Error(data.error || `HTTP ${res.status}`);
+    }
+  } catch (err) {
+    sBox.className = 'conn-box conn-err';
+    sDot.className = 'sdot sdot-err';
+    sTxt.textContent = `Erro: ${err.message}`;
+    syncLog.unshift({ time: now(), ok: false, errMsg: err.message });
+    renderLog();
+    showToast(`❌ ${err.message}`);
+  } finally {
+    if (btn) { btn.innerHTML = '🔄 Sincronizar Agora'; btn.disabled = false; }
+  }
+}
+
+let cumSent = 0, cumFetch = 0, cumErr = 0, cumSkip = 0;
+
+function updateDashboardCounters(data) {
+  cumFetch += data.fetched ?? 0;
+  cumSent  += data.sent   ?? 0;
+  cumSkip  += data.skipped ?? 0;
+  const errs = Array.isArray(data.errors) ? data.errors.length : 0;
+  cumErr = errs;
+
+  document.getElementById('stat-orders').textContent = cumFetch;
+  document.getElementById('stat-sent').textContent   = cumSent;
+  document.getElementById('stat-errors').textContent = cumErr;
+  document.getElementById('badge-errors').textContent = cumErr > 0 ? `${cumErr} erros` : '0 erros';
+  document.getElementById('badge-skipped').textContent = `${cumSkip} dup.`;
+
+  // update donut with dummy split
+  if (cumSent > 0) {
+    const paid = Math.floor(cumSent * 0.75);
+    const pend = Math.floor(cumSent * 0.18);
+    const ref  = cumSent - paid - pend;
+    updateDonut(paid, pend, ref);
+  }
+
+  // update bubbles
+  document.getElementById('bubble1').textContent = cumFetch;
+  document.getElementById('bubble2').textContent = cumSent;
+  document.getElementById('bubble3').textContent = cumSkip;
+}
+
+function renderLog() {
+  const tb = document.getElementById('log-body');
+  tb.innerHTML = syncLog.map(e => `
+    <tr>
+      <td>${e.time}</td>
+      <td>${e.fetched ?? '—'}</td>
+      <td>${e.sent ?? '—'}</td>
+      <td>${e.skipped ?? '—'}</td>
+      <td>${Array.isArray(e.errors) ? e.errors.length : (e.errMsg ? 1 : '—')}</td>
+      <td><span class="pill ${e.ok ? 'pill-ok' : 'pill-err'}">${e.ok ? '✓ OK' : '✗ Erro'}</span></td>
+    </tr>`).join('');
+}
+
+function now() {
+  return new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+let _toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ═══════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════
+let chartSync, chartDonut, chartUTM;
+
+function initCharts() {
+  const months7 = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul'];
+  const zero7   = [0,0,0,0,0,0,0];
+
+  // Bar — sync history
+  const cs = document.getElementById('chartSync').getContext('2d');
+  chartSync = new Chart(cs, {
+    type: 'bar',
+    data: {
+      labels: months7,
+      datasets: [
+        { label:'Vendas Selar', data:[...zero7], backgroundColor:'#E2E8F0', borderRadius:6, barPercentage:.55 },
+        { label:'UTMify',       data:[...zero7], backgroundColor:'#4361EE', borderRadius:6, barPercentage:.55 },
+      ]
+    },
+    options: {
+      responsive:true,
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}` } } },
+      scales:{
+        x:{ grid:{ display:false }, border:{ display:false }, ticks:{ color:'#94A3B8', font:{ size:11 } } },
+        y:{ grid:{ color:'#F0F2F7' }, border:{ display:false }, ticks:{ color:'#94A3B8', font:{ size:11 } } }
+      }
+    }
+  });
+
+  // Donut — status
+  const cd = document.getElementById('chartDonut').getContext('2d');
+  chartDonut = new Chart(cd, {
+    type: 'doughnut',
+    data: {
+      labels: ['Pagas','Pendentes','Reembolsadas'],
+      datasets:[{ data:[1,1,1], backgroundColor:['#4361EE','#F59E0B','#EF4444'], borderWidth:0, hoverOffset:4 }]
+    },
+    options: {
+      cutout:'72%',
+      plugins:{ legend:{ display:false } },
+      animation:{ animateRotate:true }
+    }
+  });
+
+  // Bar horizontal — UTM sources
+  const cu = document.getElementById('chartUTM').getContext('2d');
+  chartUTM = new Chart(cu, {
+    type: 'bar',
+    data: {
+      labels: ['Direto','Google','Facebook','Instagram','Email','YouTube'],
+      datasets:[{
+        data: [0,0,0,0,0,0],
+        backgroundColor:['#4361EE','#60A5FA','#818CF8','#A78BFA','#C4B5FD','#DDD6FE'],
+        borderRadius:5, barPercentage:.6
+      }]
+    },
+    options:{
+      indexAxis:'y', responsive:true,
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ grid:{ color:'#F0F2F7' }, border:{ display:false }, ticks:{ color:'#94A3B8', font:{ size:11 } } },
+        y:{ grid:{ display:false }, border:{ display:false }, ticks:{ color:'#64748B', font:{ size:12 } } }
+      }
+    }
+  });
+}
+
+function updateDonut(paid, pend, ref) {
+  const total = paid + pend + ref;
+  chartDonut.data.datasets[0].data = [paid, pend, ref];
+  chartDonut.update();
+  document.getElementById('donut-total').textContent = total;
+  document.getElementById('sl-paid').textContent = paid;
+  document.getElementById('sl-pend').textContent = pend;
+  document.getElementById('sl-ref').textContent  = ref;
+  const p = v => total ? Math.round(v/total*100)+'%' : '0%';
+  document.getElementById('sl-paid-pct').textContent = p(paid);
+  document.getElementById('sl-pend-pct').textContent = p(pend);
+  document.getElementById('sl-ref-pct').textContent  = p(ref);
+}
+
+function updateBarChart() {
+  const sel = document.getElementById('sel-period').value;
+  let labels, selar, utm;
+  if (sel === '3 meses') {
+    labels = ['Mai','Jun','Jul'];
+    selar  = [0,0,0];
+    utm    = [0,0,0];
+  } else if (sel === '6 meses') {
+    labels = ['Fev','Mar','Abr','Mai','Jun','Jul'];
+    selar  = [0,0,0,0,0,0];
+    utm    = [0,0,0,0,0,0];
+  } else {
+    labels = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul'];
+    selar  = [0,0,0,0,0,0,0];
+    utm    = [0,0,0,0,0,0,0];
+  }
+  chartSync.data.labels = labels;
+  chartSync.data.datasets[0].data = selar;
+  chartSync.data.datasets[1].data = utm;
+  chartSync.update();
+}
+
+// ═══════════════════════════════════════════
+// COUNTRY GROWTH (placeholder)
+// ═══════════════════════════════════════════
+function renderGrowth() {
+  const items = [
+    { flag:'🇧🇷', label:'Brasil',   pct:100, val:'—' },
+    { flag:'🇵🇹', label:'Portugal', pct:0,   val:'—' },
+    { flag:'🇺🇸', label:'EUA',      pct:0,   val:'—' },
+  ];
+  document.getElementById('bubble1').textContent = '—';
+  document.getElementById('bubble2').textContent = '—';
+  document.getElementById('bubble3').textContent = '—';
+  document.getElementById('country-list').innerHTML = items.map(i => `
+    <div class="ctr-item">
+      <div class="ctr-left"><span>${i.flag}</span>${i.label}</div>
+      <div class="ctr-right">${i.val}</div>
+    </div>
+    <div class="ctr-bar"><div class="ctr-fill" style="width:${i.pct}%"></div></div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  fillFromStorage();
+  initCharts();
+  renderGrowth();
+});
+</script>
+</body>
+</html>

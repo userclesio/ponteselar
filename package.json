@@ -1,0 +1,10 @@
+{
+  "name": "selar-utmify-bridge",
+  "version": "1.0.0",
+  "description": "Ponte que busca vendas no Selar (polling) e envia para a UTMify",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@vercel/kv": "^2.0.0"
+  }
+}
