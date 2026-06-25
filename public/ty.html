@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obrigado!</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg,#F0F2F7);
+  padding:24px;
+}
+.card{
+  background:#fff;
+  border-radius:24px;
+  padding:52px 44px;
+  max-width:520px;
+  width:100%;
+  text-align:center;
+  box-shadow:0 8px 40px rgba(0,0,0,.10);
+}
+.check-wrap{
+  width:72px;height:72px;
+  border-radius:50%;
+  background:#DCFCE7;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 28px;
+}
+.check-icon{
+  width:36px;height:36px;
+  stroke:#16A34A;stroke-width:3;
+  fill:none;stroke-linecap:round;stroke-linejoin:round;
+}
+h1{
+  font-size:clamp(22px,5vw,30px);
+  font-weight:800;
+  color:#1E293B;
+  line-height:1.25;
+  margin-bottom:12px;
+}
+.sub{
+  font-size:15px;
+  color:#64748B;
+  line-height:1.6;
+  margin-bottom:36px;
+}
+.cta-btn{
+  display:inline-block;
+  padding:16px 36px;
+  border-radius:12px;
+  font-size:15px;
+  font-weight:700;
+  font-family:inherit;
+  color:#fff;
+  background:var(--btn-color,#4361EE);
+  text-decoration:none;
+  border:none;
+  cursor:pointer;
+  transition:filter .15s,transform .1s;
+  box-shadow:0 4px 14px rgba(0,0,0,.15);
+}
+.cta-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.cta-btn:active{transform:translateY(0)}
+
+.fire-status{
+  margin-top:24px;
+  font-size:11px;
+  color:#CBD5E1;
+  min-height:16px;
+}
+
+@media(max-width:480px){
+  .card{padding:36px 24px}
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="check-wrap">
+    <svg class="check-icon" viewBox="0 0 24 24">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  </div>
+  <h1 id="headline">Obrigado pela sua compra!</h1>
+  <p class="sub" id="subheadline">Seu pedido foi confirmado e você receberá as instruções em breve.</p>
+  <a id="cta-btn" class="cta-btn" href="#">Acessar o produto</a>
+  <div class="fire-status" id="fire-status"></div>
+</div>
+
+<script>
+(function () {
+  // ── lê todos os params da URL ──────────────────────────────
+  const p = new URLSearchParams(location.search);
+  const get = k => p.get(k) || '';
+
+  const cfg = {
+    pageId:      get('id')    || 'default',
+    headline:    get('h')     || 'Obrigado pela sua compra!',
+    sub:         get('sub')   || 'Seu pedido foi confirmado e você receberá as instruções em breve.',
+    btnText:     get('btn')   || 'Acessar o produto',
+    btnLink:     get('link')  || '#',
+    btnColor:    get('color') || '#4361EE',
+    bg:          get('bg')    || '#F0F2F7',
+    productId:   get('pid')   || 'ty_product',
+    productName: get('pname') || 'Produto',
+    priceInCents:Number(get('price')) || 0,
+    xtoken:      get('xtoken')|| '',
+    // UTMs
+    utm_source:   get('utm_source'),
+    utm_medium:   get('utm_medium'),
+    utm_campaign: get('utm_campaign'),
+    utm_content:  get('utm_content'),
+    utm_term:     get('utm_term'),
+  };
+
+  // ── aplica configurações visuais ───────────────────────────
+  document.documentElement.style.setProperty('--bg', cfg.bg);
+  document.documentElement.style.setProperty('--btn-color', cfg.btnColor);
+  document.getElementById('headline').textContent    = cfg.headline;
+  document.getElementById('subheadline').textContent = cfg.sub;
+
+  const btn = document.getElementById('cta-btn');
+  btn.textContent = cfg.btnText;
+  btn.href        = cfg.btnLink || '#';
+
+  // ── visitor ID (estável por dispositivo/navegador) ─────────
+  const VID_KEY = 'ty_visitor_id';
+  let visitorId = localStorage.getItem(VID_KEY);
+  if (!visitorId) {
+    visitorId = 'v_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
+    localStorage.setItem(VID_KEY, visitorId);
+  }
+
+  // ── deduplicação: dispara UMA VEZ por dispositivo/página ───
+  const FIRED_KEY = `ty_fired_${cfg.pageId}_${visitorId}`;
+  const statusEl  = document.getElementById('fire-status');
+
+  if (localStorage.getItem(FIRED_KEY)) {
+    statusEl.textContent = '✓ Já registrado';
+    return;
+  }
+
+  // ── decodifica token do URL (fallback quando não há env var) ─
+  let utmifyToken = '';
+  if (cfg.xtoken) {
+    try { utmifyToken = atob(cfg.xtoken); } catch (_) { utmifyToken = cfg.xtoken; }
+  }
+
+  // ── dispara hit para /api/ty-hit ──────────────────────────
+  const payload = {
+    pageId:       cfg.pageId,
+    productId:    cfg.productId,
+    productName:  cfg.productName,
+    priceInCents: cfg.priceInCents,
+    visitorId,
+    utm_source:   cfg.utm_source   || null,
+    utm_medium:   cfg.utm_medium   || null,
+    utm_campaign: cfg.utm_campaign || null,
+    utm_content:  cfg.utm_content  || null,
+    utm_term:     cfg.utm_term     || null,
+  };
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (utmifyToken) headers['x-utmify-token'] = utmifyToken;
+
+  fetch('/api/ty-hit', {
+    method:  'POST',
+    headers,
+    body:    JSON.stringify(payload),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      localStorage.setItem(FIRED_KEY, '1');
+      statusEl.textContent = '✓ Conversão registrada';
+    } else {
+      statusEl.textContent = '⚠ ' + (data.error || 'Erro ao registrar');
+    }
+  })
+  .catch(err => {
+    statusEl.textContent = '⚠ Erro de rede: ' + err.message;
+  });
+})();
+</script>
+</body>
+</html>

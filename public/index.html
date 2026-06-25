@@ -200,6 +200,7 @@ tr:hover td{background:#FAFBFC}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
   .charts-row,.bottom-row{grid-template-columns:1fr}
   .settings-grid{grid-template-columns:1fr}
+  .ty-grid{grid-template-columns:1fr !important}
 }
 @media(max-width:700px){
   body{flex-direction:column}
@@ -233,6 +234,9 @@ tr:hover td{background:#FAFBFC}
   </div>
   <div class="nav-item" data-view="transactions" onclick="nav('transactions')">
     <span class="ni">📦</span> Vendas
+  </div>
+  <div class="nav-item" data-view="thankyou" onclick="nav('thankyou')">
+    <span class="ni">🎉</span> Páginas
   </div>
 
   <div class="nav-label">Financeiro</div>
@@ -645,6 +649,138 @@ tr:hover td{background:#FAFBFC}
 
   </div>
 </div><!-- /view-settings -->
+
+
+<!-- ══════════════ VIEW: THANK YOU PAGES ══════════════ -->
+<div id="view-thankyou" class="view">
+  <div class="header">
+    <div class="header-left">
+      <h1>Páginas de Obrigado</h1>
+      <p>Crie páginas que disparam conversões na UTMify ao serem visitadas</p>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-p" onclick="tyNewPage()">+ Nova Página</button>
+    </div>
+  </div>
+
+  <!-- BUILDER + PREVIEW -->
+  <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;margin-bottom:20px" class="ty-grid">
+
+    <!-- BUILDER -->
+    <div class="settings-card">
+      <h3 style="margin-bottom:6px">✏️ Configurar Página</h3>
+      <p class="desc">Preencha os campos e copie a URL gerada para usar como destino de conversão.</p>
+
+      <div class="frow">
+        <div class="fg">
+          <label>Headline <span style="color:var(--danger)">*</span></label>
+          <input class="finput" id="ty-headline" placeholder="Obrigado pela sua compra!" oninput="tyUpdatePreview()">
+        </div>
+        <div class="fg">
+          <label>Subheadline</label>
+          <input class="finput" id="ty-sub" placeholder="Seu acesso será enviado em breve." oninput="tyUpdatePreview()">
+        </div>
+      </div>
+
+      <div class="frow">
+        <div class="fg">
+          <label>Texto do Botão <span style="color:var(--danger)">*</span></label>
+          <input class="finput" id="ty-btn" placeholder="Acessar o produto" oninput="tyUpdatePreview()">
+        </div>
+        <div class="fg">
+          <label>Cor do Botão</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="color" id="ty-color" value="#4361EE" oninput="tyUpdatePreview()"
+              style="width:44px;height:38px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;padding:2px">
+            <input class="finput" id="ty-color-hex" value="#4361EE" maxlength="7"
+              style="flex:1" oninput="document.getElementById('ty-color').value=this.value;tyUpdatePreview()">
+          </div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Link do Botão <span style="color:var(--danger)">*</span></label>
+        <input class="finput" id="ty-link" placeholder="https://seusite.com/produto" oninput="tyUpdatePreview()">
+      </div>
+
+      <div class="frow">
+        <div class="fg">
+          <label>Nome do Produto</label>
+          <input class="finput" id="ty-pname" placeholder="Meu Curso" oninput="tyUpdatePreview()">
+        </div>
+        <div class="fg">
+          <label>Preço (USD)</label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:14px;font-weight:600;color:var(--text-muted)">$</span>
+            <input class="finput" id="ty-price" type="number" min="0" step="0.01" placeholder="97.00" oninput="tyUpdatePreview()">
+          </div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>ID da Página</label>
+        <div style="display:flex;gap:8px">
+          <input class="finput" id="ty-id" placeholder="obrigado-curso-x" style="flex:1" oninput="tyUpdatePreview()">
+          <button class="btn btn-o" onclick="tyGenId()" style="flex-shrink:0">🎲</button>
+        </div>
+        <div class="hint">Identificador único — usado para deduplicação por dispositivo.</div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-p" onclick="tySavePage()">💾 Salvar Página</button>
+        <button class="btn btn-o" onclick="tyOpenPage()">👁 Abrir Preview</button>
+      </div>
+    </div>
+
+    <!-- PREVIEW + URL -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <!-- visual preview -->
+      <div class="settings-card" style="padding:20px;text-align:center">
+        <p style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:14px">Preview</p>
+        <div id="ty-preview-card" style="background:#F0F2F7;border-radius:16px;padding:28px 20px;transition:all .2s">
+          <div style="width:52px;height:52px;border-radius:50%;background:#DCFCE7;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div id="ty-prev-h" style="font-size:15px;font-weight:800;color:#1E293B;margin-bottom:8px;line-height:1.3">Obrigado pela sua compra!</div>
+          <div id="ty-prev-sub" style="font-size:12px;color:#64748B;margin-bottom:18px;line-height:1.5">Seu acesso será enviado em breve.</div>
+          <span id="ty-prev-btn" style="display:inline-block;padding:11px 24px;border-radius:10px;font-size:13px;font-weight:700;color:#fff;background:#4361EE">Acessar o produto</span>
+        </div>
+      </div>
+
+      <!-- URL gerada -->
+      <div class="settings-card" style="padding:20px">
+        <p style="font-size:12px;font-weight:600;margin-bottom:10px">🔗 URL Gerada</p>
+        <div id="ty-url-box" style="background:#1E293B;color:#86EFAC;border-radius:10px;padding:12px 14px;font-family:monospace;font-size:10.5px;line-height:1.6;word-break:break-all;min-height:60px">
+          Preencha os campos ao lado para gerar a URL.
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-p" onclick="tyCopyUrl()" style="flex:1">📋 Copiar URL</button>
+          <button class="btn btn-o" onclick="tyOpenPage()">↗ Abrir</button>
+        </div>
+        <div class="hint" style="margin-top:8px">Cole esta URL como destino de compra no Selar ou como página de redirecionamento pós-pagamento. Os UTMs são capturados automaticamente.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PÁGINAS SALVAS -->
+  <div class="tbl-card">
+    <div class="cc-head" style="margin-bottom:16px">
+      <div><h3>Páginas Salvas</h3><p style="font-size:12px;color:var(--text-muted)">Gerencie suas páginas de obrigado</p></div>
+    </div>
+    <table>
+      <thead><tr>
+        <th>ID</th><th>Headline</th><th>Produto</th><th>Preço</th><th>Cor</th><th>Ações</th>
+      </tr></thead>
+      <tbody id="ty-pages-body">
+        <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:28px 0">
+          Nenhuma página criada ainda. Preencha o formulário acima e clique em Salvar.
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+</div><!-- /view-thankyou -->
 
 </main><!-- /main -->
 
@@ -1070,7 +1206,175 @@ document.addEventListener('DOMContentLoaded', () => {
   fillFromStorage();
   initCharts();
   renderGrowth();
+  tyRenderPages();
 });
+
+// ═══════════════════════════════════════════
+// THANK YOU PAGES
+// ═══════════════════════════════════════════
+const TY_KEY = 'ty_pages';
+
+function tyLoadPages() {
+  try { return JSON.parse(localStorage.getItem(TY_KEY) || '[]'); } catch { return []; }
+}
+
+function tySavePages(pages) {
+  localStorage.setItem(TY_KEY, JSON.stringify(pages));
+}
+
+function tyBuildUrl(page) {
+  const base = location.origin + '/ty.html';
+  const c    = loadCfg();
+  const params = new URLSearchParams({
+    id:    page.id,
+    h:     page.headline,
+    sub:   page.sub      || '',
+    btn:   page.btn,
+    link:  page.link,
+    color: page.color,
+    pid:   page.id,
+    pname: page.pname    || '',
+    price: String(Math.round((parseFloat(page.price) || 0) * 100)),
+  });
+  if (c.utmifyToken) params.set('xtoken', btoa(c.utmifyToken));
+  return `${base}?${params.toString()}`;
+}
+
+function tyUpdatePreview() {
+  const h     = document.getElementById('ty-headline').value  || 'Obrigado pela sua compra!';
+  const sub   = document.getElementById('ty-sub').value       || 'Seu acesso será enviado em breve.';
+  const btn   = document.getElementById('ty-btn').value       || 'Acessar o produto';
+  const color = document.getElementById('ty-color').value     || '#4361EE';
+  const hex   = document.getElementById('ty-color-hex');
+  if (hex) hex.value = color;
+
+  document.getElementById('ty-prev-h').textContent   = h;
+  document.getElementById('ty-prev-sub').textContent = sub;
+  const prevBtn = document.getElementById('ty-prev-btn');
+  prevBtn.textContent        = btn;
+  prevBtn.style.background   = color;
+
+  // URL ao vivo
+  const page = tyGetForm();
+  if (page.headline && page.btn && page.link) {
+    document.getElementById('ty-url-box').textContent = tyBuildUrl(page);
+  }
+}
+
+function tyGetForm() {
+  return {
+    id:       document.getElementById('ty-id').value.trim()       || 'pagina-' + Date.now().toString(36),
+    headline: document.getElementById('ty-headline').value.trim() || '',
+    sub:      document.getElementById('ty-sub').value.trim()      || '',
+    btn:      document.getElementById('ty-btn').value.trim()      || '',
+    link:     document.getElementById('ty-link').value.trim()     || '',
+    color:    document.getElementById('ty-color').value           || '#4361EE',
+    pname:    document.getElementById('ty-pname').value.trim()    || '',
+    price:    document.getElementById('ty-price').value           || '0',
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function tyFillForm(page) {
+  document.getElementById('ty-id').value       = page.id;
+  document.getElementById('ty-headline').value = page.headline;
+  document.getElementById('ty-sub').value      = page.sub      || '';
+  document.getElementById('ty-btn').value      = page.btn;
+  document.getElementById('ty-link').value     = page.link;
+  document.getElementById('ty-color').value    = page.color    || '#4361EE';
+  document.getElementById('ty-color-hex').value= page.color    || '#4361EE';
+  document.getElementById('ty-pname').value    = page.pname    || '';
+  document.getElementById('ty-price').value    = page.price    || '';
+  tyUpdatePreview();
+}
+
+function tySavePage() {
+  const page = tyGetForm();
+  if (!page.headline || !page.btn || !page.link) {
+    showToast('⚠️ Preencha Headline, Botão e Link');
+    return;
+  }
+  const pages = tyLoadPages().filter(p => p.id !== page.id);
+  pages.unshift(page);
+  tySavePages(pages);
+  tyRenderPages();
+  document.getElementById('ty-url-box').textContent = tyBuildUrl(page);
+  showToast('✅ Página salva');
+}
+
+function tyGenId() {
+  const id = 'pg-' + Math.random().toString(36).slice(2, 8);
+  document.getElementById('ty-id').value = id;
+  tyUpdatePreview();
+}
+
+function tyNewPage() {
+  ['ty-id','ty-headline','ty-sub','ty-btn','ty-link','ty-pname','ty-price'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('ty-color').value     = '#4361EE';
+  document.getElementById('ty-color-hex').value = '#4361EE';
+  document.getElementById('ty-url-box').textContent = 'Preencha os campos ao lado para gerar a URL.';
+  document.getElementById('ty-prev-h').textContent   = 'Obrigado pela sua compra!';
+  document.getElementById('ty-prev-sub').textContent = 'Seu acesso será enviado em breve.';
+  document.getElementById('ty-prev-btn').textContent = 'Acessar o produto';
+  document.getElementById('ty-prev-btn').style.background = '#4361EE';
+  nav('thankyou');
+}
+
+function tyOpenPage() {
+  const url = document.getElementById('ty-url-box').textContent;
+  if (!url.startsWith('http')) { showToast('⚠️ Gere a URL primeiro'); return; }
+  window.open(url, '_blank');
+}
+
+function tyCopyUrl() {
+  const url = document.getElementById('ty-url-box').textContent;
+  if (!url.startsWith('http')) { showToast('⚠️ Gere a URL primeiro'); return; }
+  navigator.clipboard.writeText(url)
+    .then(() => showToast('📋 URL copiada!'))
+    .catch(() => showToast('❌ Não foi possível copiar'));
+}
+
+function tyDeletePage(id) {
+  const pages = tyLoadPages().filter(p => p.id !== id);
+  tySavePages(pages);
+  tyRenderPages();
+  showToast('🗑 Página removida');
+}
+
+function tyEditPage(id) {
+  const page = tyLoadPages().find(p => p.id === id);
+  if (page) tyFillForm(page);
+  nav('thankyou');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function tyRenderPages() {
+  const pages = tyLoadPages();
+  const tb = document.getElementById('ty-pages-body');
+  if (!tb) return;
+  if (!pages.length) {
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:28px 0">Nenhuma página criada ainda.</td></tr>';
+    return;
+  }
+  tb.innerHTML = pages.map(p => {
+    const price = (parseFloat(p.price) || 0).toFixed(2);
+    const url   = tyBuildUrl(p);
+    return `<tr>
+      <td><code style="background:var(--bg);padding:2px 7px;border-radius:5px;font-size:12px">${p.id}</code></td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.headline}</td>
+      <td>${p.pname || '—'}</td>
+      <td>$${price}</td>
+      <td><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:${p.color || '#4361EE'};border:1px solid rgba(0,0,0,.1)"></span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-o" style="padding:5px 10px;font-size:11px;margin-right:4px" onclick="tyEditPage('${p.id}')">✏️</button>
+        <button class="btn btn-o" style="padding:5px 10px;font-size:11px;margin-right:4px" onclick="navigator.clipboard.writeText('${url}').then(()=>showToast('📋 URL copiada!'))">🔗</button>
+        <button class="btn btn-o" style="padding:5px 10px;font-size:11px" onclick="tyDeletePage('${p.id}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
 </script>
 </body>
 </html>
